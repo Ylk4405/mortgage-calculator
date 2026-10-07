@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capital M Mortgage Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --navy:#0A2A52;
+    --navy-2:#0F3A72;
+    --blue:#1B5FD6;
+    --blue-light:#4F8AEE;
+    --sky:#EAF1FD;
+    --sky-2:#DCE9FB;
+    --paper:#F4F7FC;
+    --ink:#122038;
+    --ink-soft:#5B6B84;
+    --line:#D9E3F2;
+    --good:#1C8A5A;
+    --good-bg:#E5F6ED;
+    --warn:#B4772A;
+    --warn-bg:#FBF1E0;
+    --gold:#C9A14A;
+    --white:#FFFFFF;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px 60px;}
+
+  /* -------- Header / brand -------- */
+  header.brand{background:linear-gradient(120deg,var(--navy) 0%,var(--navy-2) 100%);margin:0 0 26px;padding:22px 24px;border-radius:0 0 18px 18px;}
+  .brand-row{max-width:1132px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+  .brand-id{display:flex;align-items:center;gap:13px;}
+  .brand-mark{width:46px;height:46px;border-radius:50%;background:linear-gradient(145deg,var(--gold),#A3812F);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--navy);flex-shrink:0;}
+  .brand-name{font-family:'Fraunces',serif;font-weight:700;font-size:19px;color:#fff;letter-spacing:.01em;line-height:1.1;}
+  .brand-name span{display:block;font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-top:3px;}
+  .broker-id{text-align:right;color:#C9D7EC;font-size:12.5px;line-height:1.55;}
+  .broker-id b{color:#fff;font-size:14.5px;font-family:'Fraunces',serif;font-weight:600;}
+  .broker-id a{color:#C9D7EC;text-decoration:none;}
+  .broker-id a:hover{color:#fff;text-decoration:underline;}
+  @media(max-width:620px){.broker-id{text-align:left;}}
+
+  .page-head{padding:2px 0 22px;}
+  .page-head h1{font-family:'Fraunces',serif;font-weight:600;font-size:26px;margin:0;color:var(--navy);letter-spacing:-.01em;}
+  .page-head p{margin:7px 0 0;color:var(--ink-soft);font-size:14px;max-width:580px;}
+
+  .layout{display:grid;grid-template-columns:372px 1fr;gap:22px;align-items:start;}
+  @media(max-width:920px){.layout{grid-template-columns:1fr;}}
+
+  .card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:22px;}
+  .card + .card{margin-top:18px;}
+
+  h2.card-title{font-family:'Fraunces',serif;font-size:15.5px;font-weight:600;color:var(--navy);margin:0 0 4px;}
+  p.card-sub{margin:0 0 16px;color:var(--ink-soft);font-size:12.5px;}
+
+  label{display:block;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--ink-soft);margin:0 0 6px;}
+  .field{margin-bottom:16px;}
+  .field.tight{margin-bottom:8px;}
+  input[type=text],input[type=number],select{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:'Inter',sans-serif;font-size:14.5px;background:var(--paper);color:var(--ink);
+  }
+  input:focus,select:focus{outline:2px solid var(--blue-light);outline-offset:1px;background:var(--white);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  .dollar-input{position:relative;}
+  .dollar-input::before{content:'$';position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-soft);font-size:14.5px;pointer-events:none;}
+  .dollar-input input{padding-left:24px;}
+  .pct-input{position:relative;}
+  .pct-input input{padding-right:26px;}
+  .pct-input::after{content:'%';position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--ink-soft);font-size:14.5px;pointer-events:none;}
+
+  /* down payment */
+  .down-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .seg button{background:var(--white);border:none;color:var(--ink-soft);font-size:11.5px;font-weight:600;padding:5px 11px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .seg button.active{background:var(--blue);color:#fff;}
+  .down-amt-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .down-amt-row .amt{font-family:'Fraunces',serif;font-size:21px;font-weight:600;color:var(--navy);}
+  .down-amt-row .pct{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--blue);font-weight:600;}
+  .meter-track{height:8px;border-radius:5px;background:var(--line);position:relative;margin-bottom:10px;}
+  .meter-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue-light),var(--blue));}
+  input[type=range].down-slider{-webkit-appearance:none;width:100%;height:8px;background:transparent;margin:-18px 0 10px;position:relative;}
+  input[type=range].down-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--blue);cursor:pointer;margin-top:-5px;box-shadow:0 1px 3px rgba(10,42,82,.3);}
+  input[type=range].down-slider::-webkit-slider-runnable-track{height:8px;background:transparent;}
+  input[type=range].down-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--blue);cursor:pointer;}
+  input[type=range].down-slider::-moz-range-track{height:8px;background:transparent;}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .chip{border:1px solid var(--line);background:var(--paper);color:var(--ink-soft);font-size:12px;font-weight:600;padding:5px 11px;border-radius:20px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .chip:hover{border-color:var(--blue-light);color:var(--blue);}
+  .chip.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .manual-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+
+  .helper-toggle{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--blue);cursor:pointer;font-weight:600;margin-bottom:10px;background:none;border:none;width:100%;padding:0;font-family:'Inter',sans-serif;}
+  .helper-toggle .lbl{color:var(--ink-soft);font-weight:500;}
+  .reco-grid{display:none;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+  .reco-grid.open{display:grid;}
+  .reco-card{border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--paper);cursor:pointer;text-align:left;font-family:'Inter',sans-serif;}
+  .reco-card:hover{border-color:var(--blue-light);background:var(--sky);}
+  .reco-card b{display:block;font-size:12.5px;color:var(--navy);}
+  .reco-card span{font-size:11px;color:var(--ink-soft);}
+
+  .checkline{display:flex;gap:9px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:12.5px;color:var(--ink-soft);}
+  .checkline input{width:auto;margin-top:2px;}
+  .checkline b{color:var(--ink);display:block;font-size:13px;margin-bottom:2px;}
+
+  /* hero payment card */
+  .hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);color:#fff;border-radius:var(--radius);padding:26px 26px 22px;}
+  .hero .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#9CC0F2;margin:0 0 6px;}
+  .hero .amount{font-family:'Fraunces',serif;font-size:40px;font-weight:600;margin:0;letter-spacing:-.01em;}
+  .hero .sub{color:#C3D6F2;font-size:13px;margin:4px 0 18px;}
+  .hero-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 10px;border-top:1px solid rgba(255,255,255,.16);padding-top:16px;}
+  .hero-grid .item .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:#8EB2E4;margin-bottom:3px;display:block;}
+  .hero-grid .item .v{font-family:'IBM Plex Mono',monospace;font-size:14.5px;font-weight:600;display:block;}
+
+  .cash-card{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;}
+  .cash-card .big{font-family:'Fraunces',serif;font-size:27px;font-weight:600;color:var(--navy);margin:2px 0 0;}
+  .cash-card .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:600;}
+  .cash-side-num{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--navy);font-size:15px;}
+  .toggle-link{background:none;border:none;color:var(--blue);font-size:12.5px;font-weight:600;cursor:pointer;padding:0;margin-top:12px;font-family:'Inter',sans-serif;}
+
+  .breakdown{display:none;width:100%;margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;}
+  .breakdown.open{display:block;}
+  .bd-group-title{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin:14px 0 4px;display:flex;justify-content:space-between;}
+  .bd-group-title:first-child{margin-top:0;}
+  .bd-line{display:flex;justify-content:space-between;font-size:12.5px;padding:3.5px 0;color:var(--ink-soft);padding-left:4px;}
+  .bd-line span:last-child{font-family:'IBM Plex Mono',monospace;color:var(--ink);}
+  .bd-note{font-size:11px;color:var(--ink-soft);font-style:italic;margin-top:12px;line-height:1.5;}
+
+  .banner{border-radius:11px;padding:13px 16px;font-size:13px;display:flex;gap:10px;align-items:flex-start;}
+  .banner.good{background:var(--good-bg);color:#155C3B;}
+  .banner.warn{background:var(--warn-bg);color:#7A4E17;}
+  .banner b{font-weight:700;}
+
+  .decision{background:linear-gradient(135deg,var(--sky) 0%,var(--sky-2) 100%);border:1px solid var(--line);}
+  .decision .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin:0 0 8px;}
+  .decision h3{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin:0 0 6px;color:var(--navy);line-height:1.35;}
+  .decision h3 b{color:var(--blue);font-weight:700;}
+  .decision .range-note{font-size:12.5px;color:#B4772A;margin:0 0 14px;}
+  .decision .broker-line{font-size:12.5px;color:var(--ink-soft);margin-top:12px;border-top:1px solid var(--line);padding-top:12px;}
+  .decision .broker-line b{color:var(--navy);}
+
+  table.compare{width:100%;border-collapse:collapse;font-size:13px;}
+  table.compare th{text-align:right;color:var(--ink-soft);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:0 8px 8px;font-weight:600;}
+  table.compare th:first-child,table.compare td:first-child{text-align:left;}
+  table.compare td{text-align:right;padding:9px 8px;border-top:1px solid var(--line);font-family:'IBM Plex Mono',monospace;}
+  table.compare tr.current td{background:var(--sky);font-weight:700;color:var(--navy);}
+  table.compare tr.current td:first-child{border-radius:8px 0 0 8px;}
+  table.compare tr.current td:last-child{border-radius:0 8px 8px 0;}
+
+  .save-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .save-row input{flex:1;min-width:180px;}
+  .plans-list{margin-top:14px;}
+  .plan-item{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--paper);border:1px solid var(--line);border-radius:9px;margin-bottom:8px;font-size:13px;}
+  .plan-item .pname{font-weight:600;color:var(--navy);}
+  .plan-item .pmeta{color:var(--ink-soft);font-size:11.5px;}
+  .plan-actions button{background:none;border:none;color:var(--blue);font-weight:600;font-size:12px;cursor:pointer;margin-left:10px;font-family:'Inter',sans-serif;}
+  .plan-actions button.del{color:#A24B3F;}
+
+  button.btn{background:var(--blue);color:#fff;border:none;padding:11px 20px;border-radius:9px;font-weight:600;font-size:13.5px;cursor:pointer;font-family:'Inter',sans-serif;}
+  button.btn:hover{background:var(--navy-2);}
+  a.btn{display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;border:none;padding:11px 20px;border-radius:9px;font-weight:600;font-size:13.5px;cursor:pointer;font-family:'Inter',sans-serif;text-decoration:none;}
+  a.btn:hover{background:var(--navy-2);}
+  button.btn.ghost{background:transparent;color:var(--blue);border:1px solid var(--line);}
+  button.btn.ghost:hover{background:var(--sky);}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+
+  .note{font-size:11.5px;color:var(--ink-soft);margin-top:14px;line-height:1.5;}
+
+  footer.site{max-width:1132px;margin:30px auto 0;padding:16px 24px 0;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-soft);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  footer.site b{color:var(--navy);}
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <div class="brand-row">
+    <div class="brand-id">
+      <div class="brand-mark">M</div>
+      <div class="brand-name">Capital M<span>Mortgage Advisory</span></div>
+    </div>
+    <div class="broker-id">
+      <b>Joseph Kohn</b><br>
+      NMLS #2732442<br>
+      <a href="tel:8456371765">(845) 637-1765</a> · <a href="mailto:jkohn@thecapitalm.com">jkohn@thecapitalm.com</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="page-head">
+    <h1>What will this home actually cost you?</h1>
+    <p>Enter your numbers and see the full monthly payment, closing costs, and cash-to-close update instantly.</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- ================= INPUTS ================= -->
+    <div>
+      <div class="card">
+        <h2 class="card-title">Loan Details</h2>
+        <p class="card-sub">Property address is optional — everything else drives the numbers.</p>
+
+        <div class="field">
+          <label>Property Address (optional)</label>
+          <input type="text" id="addr" placeholder="123 Maple St, Buffalo NY">
+        </div>
+
+        <div class="field">
+          <label>Purchase Price</label>
+          <div class="dollar-input"><input type="number" id="price" value="450000"></div>
+        </div>
+
+        <div class="field tight">
+          <div class="down-head">
+            <label style="margin:0;">Down Payment</label>
+            <div class="seg" id="down_mode_seg">
+              <button type="button" class="mode-btn active" data-mode="slider">Slider</button>
+              <button type="button" class="mode-btn" data-mode="manual">Manual</button>
+            </div>
+          </div>
+
+          <div id="down_slider_mode">
+            <div class="down-amt-row">
+              <span class="amt" id="down_amt_display">$90,000</span>
+              <span class="pct" id="down_pct_display">20%</span>
+            </div>
+            <div class="meter-track"><div class="meter-fill" id="down_meter" style="width:25%"></div></div>
+            <input type="range" class="down-slider" id="down_slider" min="0" max="50" step="0.5" value="20">
+            <div class="chips" id="down_chips">
+              <button type="button" class="chip" data-pct="5">5%</button>
+              <button type="button" class="chip" data-pct="10">10%</button>
+              <button type="button" class="chip" data-pct="15">15%</button>
+              <button type="button" class="chip active" data-pct="20">20%</button>
+              <button type="button" class="chip" data-pct="25">25%</button>
+            </div>
+          </div>
+
+          <div id="down_manual_mode" style="display:none;">
+            <div class="manual-row">
+              <div class="dollar-input"><input type="number" id="down_dollar" value="90000"></div>
+              <div class="pct-input"><input type="number" step="0.1" id="down_pct_input" value="20"></div>
+            </div>
+          </div>
+
+          <button type="button" class="helper-toggle" id="reco_toggle">
+            <span>✨ Not sure what to put down?</span><span id="reco_toggle_lbl">Show recommended</span>
+          </button>
+          <div class="reco-grid" id="reco_grid">
+            <button type="button" class="reco-card" data-pct="5"><b>Low cash</b><span>5% down</span></button>
+            <button type="button" class="reco-card" data-pct="10"><b>Balanced</b><span>10% down</span></button>
+            <button type="button" class="reco-card" data-pct="20"><b>No PMI</b><span>20% down</span></button>
+            <button type="button" class="reco-card" data-pct="25"><b>Strong buyer</b><span>25% down</span></button>
+          </div>
+
+          <div class="checkline" style="margin-top:4px;">
+            <input type="checkbox" id="no_pmi_override">
+            <div>
+              <b>No PMI on this loan</b>
+              Check if you're under 20% down but PMI doesn't apply (e.g. lender-paid MI, VA loan, or appraised value puts LTV under 80%).
+            </div>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Interest Rate</label>
+            <div class="pct-input"><input type="number" step="0.01" id="rate" value="6.5"></div>
+          </div>
+          <div class="field">
+            <label>Loan Term</label>
+            <select id="term">
+              <option value="30" selected>30 years</option>
+              <option value="20">20 years</option>
+              <option value="15">15 years</option>
+              <option value="10">10 years</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Credit Score</label>
+            <select id="credit">
+              <option value="740">740+</option>
+              <option value="700">700 – 739</option>
+              <option value="660">660 – 699</option>
+              <option value="600">Below 660</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Property Tax / yr</label>
+            <div class="dollar-input"><input type="number" id="tax" value="9450"></div>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Insurance / yr</label>
+            <div class="dollar-input"><input type="number" id="ins" value="1500"></div>
+          </div>
+          <div class="field">
+            <label>HOA / mo</label>
+            <div class="dollar-input"><input type="number" id="hoa" value="0"></div>
+          </div>
+        </div>
+
+        <p class="note">Estimates only — your lender, insurer, and county set the final rate, PMI, tax, and closing figures at underwriting.</p>
+      </div>
+    </div>
+
+    <!-- ================= RESULTS ================= -->
+    <div>
+
+      <div class="hero">
+        <p class="eyebrow">Total Monthly Payment</p>
+        <p class="amount" id="hero_amount">$2,752</p>
+        <p class="sub" id="hero_sub">20% down · 30-yr · 6.5%</p>
+        <div class="hero-grid">
+          <div class="item"><span class="l">Principal</span><span class="v" id="hg_principal">$358</span></div>
+          <div class="item"><span class="l">Interest</span><span class="v" id="hg_interest">$1,800</span></div>
+          <div class="item"><span class="l">Principal &amp; Interest</span><span class="v" id="hg_pi">$2,158</span></div>
+          <div class="item"><span class="l">Property Taxes</span><span class="v" id="hg_tax">$469</span></div>
+          <div class="item"><span class="l">Insurance</span><span class="v" id="hg_ins">$125</span></div>
+          <div class="item"><span class="l">PMI</span><span class="v" id="hg_pmi">$0</span></div>
+          <div class="item"><span class="l">HOA</span><span class="v" id="hg_hoa">$0</span></div>
+          <div class="item"><span class="l">Loan Amount</span><span class="v" id="hg_loan">$360,000</span></div>
+        </div>
+      </div>
+
+      <div class="card cash-card">
+        <div>
+          <span class="lbl">Total Cash to Close</span>
+          <div class="big" id="cash_total">$103,111</div>
+          <button type="button" class="toggle-link" id="cash_toggle">View closing breakdown ▾</button>
+        </div>
+        <div style="text-align:right;">
+          <span class="lbl">Down Payment</span>
+          <div class="cash-side-num" id="cash_down">$90,000</div>
+          <span class="lbl" style="margin-top:8px;display:block;">Closing Costs (NY Est.)</span>
+          <div class="cash-side-num" id="cash_cc">$13,111</div>
+        </div>
+        <div class="breakdown" id="cash_breakdown">
+          <div class="bd-group-title"><span>Government Taxes</span><span id="bd_gov_total"></span></div>
+          <div class="bd-line"><span>Mortgage Tax — Buyer's Portion (1.05%)</span><span id="bd_mt_buyer"></span></div>
+          <div class="bd-line"><span>Mortgage Tax — Lender's Portion (0.25%)</span><span id="bd_mt_lender"></span></div>
+
+          <div class="bd-group-title"><span>Title Insurance</span><span id="bd_title_total"></span></div>
+          <div class="bd-line"><span>Owner's Policy</span><span id="bd_title_owner"></span></div>
+          <div class="bd-line"><span>Loan Policy</span><span id="bd_title_loan"></span></div>
+
+          <div class="bd-group-title"><span>Title Company Fees</span><span id="bd_tf_total">$1,035</span></div>
+          <div class="bd-line"><span>Bankruptcy Search</span><span>$50</span></div>
+          <div class="bd-line"><span>Patriot's Search</span><span>$20</span></div>
+          <div class="bd-line"><span>Overnights</span><span>$50</span></div>
+          <div class="bd-line"><span>Waiver of Arbitration</span><span>$50</span></div>
+          <div class="bd-line"><span>Environmental Endorsement</span><span>$50</span></div>
+          <div class="bd-line"><span>Escrow Service Fee</span><span>$50</span></div>
+          <div class="bd-line"><span>Mortgage Recording Fee</span><span>$200</span></div>
+          <div class="bd-line"><span>Deed Recording Fee</span><span>$145</span></div>
+          <div class="bd-line"><span>Municipal Searches</span><span>$295</span></div>
+          <div class="bd-line"><span>Transfer Tax Filing Fee</span><span>$125</span></div>
+
+          <div class="bd-group-title"><span>Other Estimated Costs</span><span id="bd_other_total"></span></div>
+          <div class="bd-line"><span>Attorney Fee (estimate)</span><span id="bd_attorney">$2,000</span></div>
+          <div class="bd-line"><span>Lender Fees (origination, appraisal, underwriting)</span><span id="bd_lender_fees"></span></div>
+          <div class="bd-line"><span>Escrows &amp; Prepaids (≈2 mo. taxes + 2 mo. insurance)</span><span id="bd_escrows"></span></div>
+
+          <p class="bd-note">Title insurance, mortgage tax, and recording fees reflect typical NY title-company schedules. Attorney and lender fees are estimates — actual costs vary by provider and closing month.</p>
+        </div>
+      </div>
+
+      <div class="banner good" id="pmi_banner">
+        <span>✓</span>
+        <span><b>No PMI required</b> — you're saving money every month by putting 20% or more down.</span>
+      </div>
+
+      <div class="card decision">
+        <p class="eyebrow">Your Next Step</p>
+        <h3 id="decision_headline">Based on your numbers, you're in a <b>strong buying position</b> in the $427,500 – $486,000 range.</h3>
+        <p class="range-note" id="decision_market">🔥 Homes in this price range are actively selling in this market.</p>
+        <div class="btn-row">
+          <a class="btn" id="zillow_btn" href="#" target="_blank" rel="noopener">Show Me Homes I Can Afford Now →</a>
+        </div>
+        <p class="broker-line">Want a custom strategy based on your numbers? I'll personally walk you through it. — <b>Joseph Kohn</b>, NMLS #2732442 · <a href="tel:8456371765" style="color:var(--blue);">(845) 637-1765</a></p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Save This As My Buying Plan</h2>
+        <p class="card-sub">Lock in these numbers. Pull them up anytime in this browser, or share the PDF with your lender.</p>
+        <div class="save-row">
+          <input type="text" id="plan_name" placeholder='Name your plan (e.g. "123 Maple — 20% down")'>
+          <button class="btn" id="save_plan_btn">Save This As My Buying Plan</button>
+        </div>
+        <div class="plans-list" id="plans_list"></div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Compare Down Payment Scenarios</h2>
+        <p class="card-sub">Same home, same rate — see how the down payment changes your monthly and cash-to-close numbers.</p>
+        <table class="compare">
+          <thead><tr><th>Down %</th><th>Down $</th><th>Monthly</th><th>PMI</th><th>Cash to Close</th></tr></thead>
+          <tbody id="compare_body"></tbody>
+        </table>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn ghost" id="pdf_btn">⬇ Download PDF Summary</button>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="site">
+    <span><b>Capital M Mortgage Advisory</b> · Joseph Kohn · NMLS #2732442</span>
+    <span>(845) 637-1765 · jkohn@thecapitalm.com</span>
+  </footer>
+</div>
+
+<script>
+const fmt$ = n => '$' + (Math.round(n||0)).toLocaleString('en-US');
+const val = id => +(document.getElementById(id).value)||0;
+
+function amortPayment(loan, monthlyRate, nPay){
+  if(nPay<=0) return 0;
+  return monthlyRate>0 ? loan*(monthlyRate*Math.pow(1+monthlyRate,nPay))/(Math.pow(1+monthlyRate,nPay)-1) : loan/nPay;
+}
+
+function pmiRateForCredit(band){
+  // typical annual PMI % by credit tier, applied when LTV > 80%
+  if(band>=740) return 0.55;
+  if(band>=700) return 0.75;
+  if(band>=660) return 1.00;
+  return 1.30;
+}
+
+function computeScenario(price, down, rate, termYrs, taxYr, insYr, hoaMo, creditBand, noPmiOverride){
+  const downPct = price>0 ? (down/price*100) : 0;
+  const loan = Math.max(price-down,0);
+  const monthlyRate = rate/100/12;
+  const nPay = termYrs*12;
+  const pi = amortPayment(loan, monthlyRate, nPay);
+  const interestPart = loan*monthlyRate;
+  const principalPart = Math.max(pi-interestPart,0);
+  const tax = taxYr/12;
+  const ins = insYr/12;
+  const hoa = hoaMo;
+  const pmiAnnualPct = pmiRateForCredit(creditBand);
+  const pmi = (downPct<20 && !noPmiOverride) ? loan*pmiAnnualPct/100/12 : 0;
+  const totalMonthly = pi+tax+ins+hoa+pmi;
+
+  // ---- NY-style closing cost breakdown ----
+  const mtBuyer = loan*0.0105;
+  const mtLender = loan*0.0025;
+  const govTaxes = mtBuyer+mtLender;
+  const titleOwner = price*0.0045;
+  const titleLoanPolicy = loan*0.0010;
+  const titleInsurance = titleOwner+titleLoanPolicy;
+  const titleFeesFlat = 50+20+50+50+50+50+200+145+295+125; // 1035
+  const attorneyFee = 2000;
+  const lenderFees = Math.round((loan*0.00375)/25)*25;
+  const escrows = (taxYr/12*2)+(insYr/12*2);
+  const otherCosts = attorneyFee+lenderFees+escrows;
+  const closingCosts = govTaxes+titleInsurance+titleFeesFlat+otherCosts;
+  const cashToClose = down+closingCosts;
+
+  return {price,down,downPct,loan,pi,principalPart,interestPart,tax,ins,hoa,pmi,pmiAnnualPct,totalMonthly,
+          mtBuyer,mtLender,govTaxes,titleOwner,titleLoanPolicy,titleInsurance,titleFeesFlat,
+          attorneyFee,lenderFees,escrows,otherCosts,closingCosts,cashToClose};
+}
+
+function currentInputs(){
+  return {
+    price: val('price'), down: val('down_dollar'), rate: val('rate'), term: val('term'),
+    tax: val('tax'), ins: val('ins'), hoa: val('hoa'), credit: val('credit'),
+    noPmi: document.getElementById('no_pmi_override').checked
+  };
+}
+
+let lastResult=null;
+let downMode='slider'; // 'slider' | 'manual'
+
+function syncDownInputs(pct, fromPrice){
+  const price = val('price');
+  pct = Math.max(0, Math.min(100, pct));
+  const dollar = Math.round(price*pct/100);
+  document.getElementById('down_dollar').value = dollar;
+  document.getElementById('down_pct_input').value = Math.round(pct*10)/10;
+  document.getElementById('down_slider').value = Math.min(50, pct);
+  document.getElementById('down_amt_display').textContent = fmt$(dollar);
+  document.getElementById('down_pct_display').textContent = (Math.round(pct*10)/10) + '%';
+  document.getElementById('down_meter').style.width = Math.max(0,Math.min(100,(pct/50)*100)) + '%';
+  document.querySelectorAll('#down_chips .chip').forEach(c=>{
+    c.classList.toggle('active', Math.abs(+c.dataset.pct - pct) < 0.05);
+  });
+}
+
+function recalc(){
+  const i = currentInputs();
+  const r = computeScenario(i.price, i.down, i.rate, i.term, i.tax, i.ins, i.hoa, i.credit, i.noPmi);
+  lastResult = r;
+
+  if(downMode==='slider'){
+    syncDownInputs(r.downPct);
+  } else {
+    document.getElementById('down_pct_input').value = Math.round(r.downPct*10)/10;
+  }
+
+  // hero card
+  document.getElementById('hero_amount').textContent = fmt$(r.totalMonthly);
+  document.getElementById('hero_sub').textContent = `${r.downPct.toFixed(0)}% down · ${i.term}-yr · ${i.rate}%`;
+  document.getElementById('hg_principal').textContent = fmt$(r.principalPart);
+  document.getElementById('hg_interest').textContent = fmt$(r.interestPart);
+  document.getElementById('hg_pi').textContent = fmt$(r.pi);
+  document.getElementById('hg_tax').textContent = fmt$(r.tax);
+  document.getElementById('hg_ins').textContent = fmt$(r.ins);
+  document.getElementById('hg_pmi').textContent = fmt$(r.pmi);
+  document.getElementById('hg_hoa').textContent = fmt$(r.hoa);
+  document.getElementById('hg_loan').textContent = fmt$(r.loan);
+
+  // cash to close
+  document.getElementById('cash_total').textContent = fmt$(r.cashToClose);
+  document.getElementById('cash_down').textContent = fmt$(r.down);
+  document.getElementById('cash_cc').textContent = fmt$(r.closingCosts);
+
+  document.getElementById('bd_gov_total').textContent = fmt$(r.govTaxes);
+  document.getElementById('bd_mt_buyer').textContent = fmt$(r.mtBuyer);
+  document.getElementById('bd_mt_lender').textContent = fmt$(r.mtLender);
+  document.getElementById('bd_title_total').textContent = fmt$(r.titleInsurance);
+  document.getElementById('bd_title_owner').textContent = fmt$(r.titleOwner);
+  document.getElementById('bd_title_loan').textContent = fmt$(r.titleLoanPolicy);
+  document.getElementById('bd_other_total').textContent = fmt$(r.otherCosts);
+  document.getElementById('bd_lender_fees').textContent = fmt$(r.lenderFees);
+  document.getElementById('bd_escrows').textContent = fmt$(r.escrows);
+
+  // PMI banner
+  const banner = document.getElementById('pmi_banner');
+  if(i.noPmi){
+    banner.className = 'banner good';
+    banner.innerHTML = `<span>✓</span><span><b>No PMI on this loan</b> — manually waived (lender-paid MI, VA loan, or LTV under 80%).</span>`;
+  } else if(r.downPct>=20){
+    banner.className = 'banner good';
+    banner.innerHTML = `<span>✓</span><span><b>No PMI required</b> — you're saving money every month by putting 20% or more down.</span>`;
+  } else {
+    banner.className = 'banner warn';
+    banner.innerHTML = `<span>!</span><span><b>PMI applies</b> — about ${fmt$(r.pmi)}/mo (${r.pmiAnnualPct}% annual) until you reach 20% equity.</span>`;
+  }
+
+  // decision moment
+  const low = Math.round(i.price*0.95/500)*500;
+  const high = Math.round(i.price*1.08/500)*500;
+  let posLabel = 'entry-level position';
+  if(r.downPct>=20) posLabel='strong buying position';
+  else if(r.downPct>=10) posLabel='solid buying position';
+  document.getElementById('decision_headline').innerHTML =
+    `Based on your numbers, you're in a <b>${posLabel}</b> in the ${fmt$(low)} – ${fmt$(high)} range.`;
+  const zillowUrl = `https://www.zillow.com/homes/${low}-${high}_price/`;
+  document.getElementById('zillow_btn').href = zillowUrl;
+
+  renderCompare(i);
+}
+
+function renderCompare(i){
+  const pcts = [3,5,10,15,20,25];
+  const body = document.getElementById('compare_body');
+  body.innerHTML = pcts.map(p=>{
+    const down = i.price*p/100;
+    const r = computeScenario(i.price, down, i.rate, i.term, i.tax, i.ins, i.hoa, i.credit, i.noPmi);
+    const isCurrent = Math.abs(r.downPct - (i.price>0? i.down/i.price*100:0)) < 0.5;
+    return `<tr class="${isCurrent?'current':''}">
+      <td>${p}%</td>
+      <td>${fmt$(down)}</td>
+      <td>${fmt$(r.totalMonthly)}</td>
+      <td>${r.pmi>0?fmt$(r.pmi):'—'}</td>
+      <td>${fmt$(r.cashToClose)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ---- down payment mode toggle ---- */
+document.getElementById('down_mode_seg').addEventListener('click', e=>{
+  const btn = e.target.closest('.mode-btn');
+  if(!btn) return;
+  downMode = btn.dataset.mode;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  document.getElementById('down_slider_mode').style.display = downMode==='slider' ? '' : 'none';
+  document.getElementById('down_manual_mode').style.display = downMode==='manual' ? '' : 'none';
+});
+
+/* ---- slider drag ---- */
+document.getElementById('down_slider').addEventListener('input', e=>{
+  syncDownInputs(+e.target.value);
+  recalc();
+});
+
+/* ---- quick chips ---- */
+document.getElementById('down_chips').addEventListener('click', e=>{
+  const btn = e.target.closest('.chip');
+  if(!btn) return;
+  syncDownInputs(+btn.dataset.pct);
+  recalc();
+});
+
+/* ---- manual dollar/pct sync ---- */
+document.getElementById('down_dollar').addEventListener('input', ()=>{
+  const price = val('price');
+  const dollar = val('down_dollar');
+  const pct = price>0 ? dollar/price*100 : 0;
+  document.getElementById('down_pct_input').value = Math.round(pct*10)/10;
+  recalc();
+});
+document.getElementById('down_pct_input').addEventListener('input', ()=>{
+  const price = val('price');
+  const pct = val('down_pct_input');
+  document.getElementById('down_dollar').value = Math.round(price*pct/100);
+  recalc();
+});
+
+/* ---- "not sure what to put down" ---- */
+document.getElementById('reco_toggle').addEventListener('click', ()=>{
+  const grid = document.getElementById('reco_grid');
+  grid.classList.toggle('open');
+  document.getElementById('reco_toggle_lbl').textContent = grid.classList.contains('open') ? 'Hide' : 'Show recommended';
+});
+document.getElementById('reco_grid').addEventListener('click', e=>{
+  const btn = e.target.closest('.reco-card');
+  if(!btn) return;
+  syncDownInputs(+btn.dataset.pct);
+  recalc();
+});
+
+document.getElementById('cash_toggle').addEventListener('click', ()=>{
+  const el = document.getElementById('cash_breakdown');
+  el.classList.toggle('open');
+  document.getElementById('cash_toggle').textContent = el.classList.contains('open') ? 'Hide closing breakdown ▴' : 'View closing breakdown ▾';
+});
+
+document.querySelectorAll('.card input, .card select, #addr').forEach(el=>{
+  el.addEventListener('input', recalc);
+});
+document.getElementById('no_pmi_override').addEventListener('change', recalc);
+
+recalc();
+
+/* ---------------- Save plan (localStorage, per-browser) ---------------- */
+const PLANS_KEY = 'capitalm_mortgage_plans';
+function loadPlans(){
+  try { return JSON.parse(localStorage.getItem(PLANS_KEY) || '[]'); } catch(e){ return []; }
+}
+function savePlans(plans){
+  try { localStorage.setItem(PLANS_KEY, JSON.stringify(plans)); } catch(e){}
+}
+function renderPlans(){
+  const plans = loadPlans();
+  const list = document.getElementById('plans_list');
+  if(!plans.length){ list.innerHTML = ''; return; }
+  list.innerHTML = plans.map((p,idx)=>`
+    <div class="plan-item">
+      <div>
+        <div class="pname">${p.name}</div>
+        <div class="pmeta">${fmt$(p.price)} purchase · ${p.downPct.toFixed(1)}% down · ${fmt$(p.totalMonthly)}/mo</div>
+      </div>
+      <div class="plan-actions">
+        <button type="button" data-idx="${idx}" class="load">Load</button>
+        <button type="button" data-idx="${idx}" class="del">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+document.getElementById('save_plan_btn').addEventListener('click', ()=>{
+  const nameInput = document.getElementById('plan_name');
+  const name = nameInput.value.trim() || `${document.getElementById('addr').value || 'Untitled plan'}`;
+  const i = currentInputs();
+  const r = lastResult;
+  const plans = loadPlans();
+  plans.unshift({
+    name, addr: document.getElementById('addr').value, price: i.price, down: i.down,
+    downPct: r.downPct, rate: i.rate, term: i.term, tax: i.tax, ins: i.ins, hoa: i.hoa,
+    credit: i.credit, noPmi: i.noPmi, totalMonthly: r.totalMonthly, cashToClose: r.cashToClose
+  });
+  savePlans(plans.slice(0,20));
+  nameInput.value = '';
+  renderPlans();
+});
+document.getElementById('plans_list').addEventListener('click', e=>{
+  const idx = e.target.dataset.idx;
+  if(idx===undefined) return;
+  const plans = loadPlans();
+  if(e.target.classList.contains('del')){
+    plans.splice(+idx,1);
+    savePlans(plans);
+    renderPlans();
+    return;
+  }
+  if(e.target.classList.contains('load')){
+    const p = plans[+idx];
+    document.getElementById('addr').value = p.addr || '';
+    document.getElementById('price').value = p.price;
+    document.getElementById('rate').value = p.rate;
+    document.getElementById('term').value = p.term;
+    document.getElementById('tax').value = p.tax;
+    document.getElementById('ins').value = p.ins;
+    document.getElementById('hoa').value = p.hoa;
+    document.getElementById('credit').value = p.credit;
+    document.getElementById('no_pmi_override').checked = !!p.noPmi;
+    syncDownInputs(p.downPct);
+    recalc();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+});
+renderPlans();
+
+/* ---------------- PDF export ---------------- */
+document.getElementById('pdf_btn').addEventListener('click', ()=>{
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'letter'});
+  const navy=[10,42,82], blue=[27,95,214], soft=[91,107,132], ink=[18,32,56], gold=[201,161,74];
+  const margin = 54;
+  let y = margin;
+
+  const addr = document.getElementById('addr').value || 'Property address not provided';
+  const i = currentInputs();
+  const r = lastResult;
+
+  doc.setFillColor(...navy);
+  doc.rect(0,0,612,96,'F');
+  doc.setFillColor(...gold);
+  doc.circle(70,46,17,'F');
+  doc.setTextColor(...navy); doc.setFont('helvetica','bold'); doc.setFontSize(15);
+  doc.text('M', 70, 51, {align:'center'});
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(17);
+  doc.text('Capital M Mortgage Advisory', 100, 42);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text('Joseph Kohn  ·  NMLS #2732442  ·  (845) 637-1765  ·  jkohn@thecapitalm.com', 100, 58);
+  doc.setFontSize(11);
+  doc.text('Mortgage Payment Summary — ' + addr, 100, 78);
+
+  y = 128;
+  doc.setTextColor(...ink);
+  doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text('Total Monthly Payment: ' + fmt$(r.totalMonthly), margin, y);
+  y += 22;
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(10.5); doc.setTextColor(...soft);
+  const rows = [
+    ['Purchase Price', fmt$(r.price)],
+    ['Down Payment', fmt$(r.down) + ' (' + r.downPct.toFixed(1) + '%)'],
+    ['Loan Amount', fmt$(r.loan)],
+    ['Interest Rate', i.rate + '%'],
+    ['Loan Term', i.term + ' years'],
+    ['Principal & Interest', fmt$(r.pi) + '/mo'],
+    ['Property Tax', fmt$(r.tax) + '/mo'],
+    ['Home Insurance', fmt$(r.ins) + '/mo'],
+    ['PMI', fmt$(r.pmi) + '/mo'],
+    ['HOA', fmt$(r.hoa) + '/mo'],
+    ['Closing Costs (NY est.)', fmt$(r.closingCosts)],
+    ['Total Cash to Close', fmt$(r.cashToClose)],
+  ];
+  rows.forEach(([label,value])=>{
+    doc.setTextColor(...soft);
+    doc.text(label, margin, y);
+    doc.setTextColor(...ink);
+    doc.text(value, 400, y);
+    doc.setDrawColor(217,227,242);
+    doc.line(margin, y+6, 558, y+6);
+    y += 22;
+  });
+
+  y += 8;
+  doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor(...blue);
+  doc.text('Closing Cost Breakdown (NY Estimate)', margin, y);
+  y += 16;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+  const ccRows = [
+    ["Mortgage Tax — Buyer's Portion (1.05%)", fmt$(r.mtBuyer)],
+    ["Mortgage Tax — Lender's Portion (0.25%)", fmt$(r.mtLender)],
+    ["Title Insurance — Owner's Policy", fmt$(r.titleOwner)],
+    ["Title Insurance — Loan Policy", fmt$(r.titleLoanPolicy)],
+    ['Title Company Fees (flat schedule)', fmt$(r.titleFeesFlat)],
+    ['Attorney Fee (estimate)', fmt$(r.attorneyFee)],
+    ['Lender Fees (origination, appraisal, underwriting)', fmt$(r.lenderFees)],
+    ['Escrows & Prepaids (≈2mo tax + 2mo insurance)', fmt$(r.escrows)],
+  ];
+  ccRows.forEach(([label,value])=>{
+    doc.setTextColor(...soft); doc.text(label, margin, y);
+    doc.setTextColor(...ink); doc.text(value, 440, y);
+    y += 15;
+  });
+  y += 10;
+  doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...navy);
+  doc.text('Total Closing Costs: ' + fmt$(r.closingCosts), margin, y);
+
+  y += 26;
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...blue);
+  doc.text('Down Payment Comparison', margin, y);
+  y += 18;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...ink);
+  const pcts = [3,5,10,15,20,25];
+  const colX = [margin, margin+90, margin+190, margin+290, margin+390];
+  doc.setTextColor(...soft);
+  ['Down %','Down $','Monthly','PMI','Cash to Close'].forEach((h,idx)=>doc.text(h,colX[idx],y));
+  y += 16;
+  doc.setTextColor(...ink);
+  pcts.forEach(p=>{
+    const down = i.price*p/100;
+    const sc = computeScenario(i.price, down, i.rate, i.term, i.tax, i.ins, i.hoa, i.credit, i.noPmi);
+    const vals = [p+'%', fmt$(down), fmt$(sc.totalMonthly), sc.pmi>0?fmt$(sc.pmi):'—', fmt$(sc.cashToClose)];
+    vals.forEach((v,idx)=>doc.text(v,colX[idx],y));
+    y += 17;
+  });
+
+  y += 18;
+  if(y>680){ doc.addPage(); y=margin; }
+  doc.setFont('helvetica','italic'); doc.setFontSize(8.5); doc.setTextColor(...soft);
+  doc.text('Estimates only. Actual rate, PMI, taxes, and closing costs are set by your lender, insurer, and county at underwriting.', margin, y, {maxWidth: 504});
+  y += 26;
+  doc.setDrawColor(...gold); doc.setLineWidth(1.2);
+  doc.line(margin, y, margin+220, y);
+  doc.setFontSize(9); doc.setTextColor(...soft);
+  doc.text('Joseph Kohn · NMLS #2732442 · Capital M Mortgage Advisory', margin, y+14);
+
+  doc.save('capital-m-mortgage-summary.pdf');
+});
+</script>
+</body>
+</html>
