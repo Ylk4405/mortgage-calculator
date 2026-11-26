@@ -173,7 +173,9 @@
   footer.site{max-width:1132px;margin:30px auto 0;padding:16px 24px 0;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-soft);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
   footer.site b{color:var(--navy);}
 </style>
-</head>
+<style>
+.site-shell{max-width:1500px;margin:auto;display:grid;grid-template-columns:210px minmax(0,1fr);gap:24px;padding:0 24px 32px;align-items:start}.sidebar{position:sticky;top:20px;background:white;border:1px solid #d9e3f2;border-radius:10px;padding:14px}.sidebar nav{display:flex;flex-direction:column;gap:8px;margin:0}.sidebar nav a{display:block;color:#0a2a52;background:#f4f7fc;padding:12px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600}.sidebar nav a[aria-current]{background:#1b5fd6;color:white}.nav-label{font-size:10px;letter-spacing:.1em;color:#5b6b84;padding:5px 10px}.site-shell>.wrap,.site-shell>main{width:100%;max-width:none;min-width:0;margin:0;padding:0 0 30px}header.brand{border-radius:0;margin-bottom:26px}header.brand .brand-row{max-width:1452px;width:100%}.brand-mark{flex-shrink:0}@media(max-width:760px){.site-shell{grid-template-columns:1fr;padding:0 12px;gap:16px}.sidebar{position:static}.sidebar nav{flex-direction:column}.site-shell>.wrap,.site-shell>main{padding:0 0 24px}}@media print{.sidebar{display:none}.site-shell{display:block;padding:0}}
+</style><style>body{font:15px system-ui,sans-serif}.page-head h1{font:700 30px system-ui,sans-serif}.card,.hero{border-radius:10px}.card{padding:20px}h2.card-title{font:700 17px system-ui,sans-serif}.hero{background:#0a2a52;border-top:4px solid #c9a14a}.hero .amount,.hero-grid .item .v,.cash-card .big,.down-amt-row .amt{font-family:system-ui,sans-serif;font-variant-numeric:tabular-nums}.hero .amount{font-size:36px}.hero-grid .item{background:#12365f;padding:10px;border-radius:6px}.layout{grid-template-columns:minmax(270px, .85fr) minmax(0,1.4fr);gap:16px}.card+.card{margin-top:16px}input[type=text],input[type=number],select{border-radius:6px;background:#f8faff;font-family:system-ui,sans-serif}.decision h3{font-family:system-ui,sans-serif}table.compare{font-size:12px}@media(max-width:1100px){.layout{grid-template-columns:1fr}}@media(max-width:520px){.hero-grid{grid-template-columns:1fr 1fr}.card,.hero{padding:14px}table.compare td,table.compare th{padding:6px 3px;font-size:10px}}</style></head>
 <body>
 
 <header class="brand">
@@ -190,8 +192,7 @@
   </div>
 </header>
 
-<div class="wrap">
-<nav aria-label="Calculators" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px"><a aria-current="page" href="index.html" style="background:#1B5FD6;color:white;padding:10px 15px;border-radius:6px;text-decoration:none">Home Calculator</a><a href="investment.html" style="background:#EAF1FD;color:#0A2A52;padding:10px 15px;border-radius:6px;text-decoration:none">Investment Calculator</a></nav>
+<div class="site-shell"><aside class="sidebar"><nav aria-label="Calculators"><span class="nav-label">CALCULATORS</span><a aria-current="page" href="index.html">Home Calculator</a><a  href="investment.html">Investment Calculator</a></nav></aside><div class="wrap">
 
   <div class="page-head">
     <h1>What will this home actually cost you?</h1>
@@ -419,8 +420,7 @@
   <footer class="site">
     <span><b>Capital M Mortgage Advisory</b> · Joseph Kohn · NMLS #2732442</span>
     <span>(845) 637-1765 · jkohn@thecapitalm.com</span>
-  </footer>
-</div>
+  </footer></div></div>
 
 <script>
 const fmt$ = n => '$' + (Math.round(n||0)).toLocaleString('en-US');
